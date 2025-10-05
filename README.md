@@ -5,6 +5,8 @@
 
 A comprehensive personal finance management web application built with Python Flask that helps you track investments, bank transactions, income, and monthly expenses through an intuitive web interface.
 
+<img width="1915" height="902" alt="money" src="https://github.com/user-attachments/assets/42387b8a-0ab3-44e4-aae8-a1903fa98c5d" />
+
 ## Features
 
 ### � User Authentication
@@ -54,6 +56,9 @@ A comprehensive personal finance management web application built with Python Fl
 - Account balance visualizations
 - Net worth calculations
 - Cash flow analysis
+
+<img width="1324" height="850" alt="money1" src="https://github.com/user-attachments/assets/1aa3c1a7-35a3-4fb8-9c6b-f556e8517205" />
+
 
 ## Technology Stack
 
@@ -228,5 +233,6 @@ To modify or extend the application:
 - Backup and restore functionality
 
 ## License
+
 
 This project is open source and available under the MIT License.
