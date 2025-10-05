@@ -158,3 +158,5 @@ This project is open source and available under the MIT License.
 
 **Author: Roberto Raimondo - IS Senior Systems Engineer II**
 
+© 2025 All Rights Reserved.
+
