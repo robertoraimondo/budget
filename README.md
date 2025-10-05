@@ -2,6 +2,17 @@
 
 A comprehensive personal finance management web application built with Python Flask that helps you track investments, bank transactions, income, and monthly expenses through an intuitive web interface.
 
+<img width="1915" height="902" alt="money" src="https://github.com/user-attachments/assets/c873dc59-fec5-427b-9e9e-640a981fa801" />
+<img width="1311" height="905" alt="money1" src="https://github.com/user-attachments/assets/c2208a30-69e1-4362-ba95-1b09182ec65a" />
+<img width="1329" height="817" alt="money2" src="https://github.com/user-attachments/assets/6f62f8a1-3435-4516-99af-06a6db135f0a" />
+<img width="1320" height="550" alt="money3" src="https://github.com/user-attachments/assets/6d3c4c64-8d56-41ed-afb7-7eb96bbbc257" />
+<img width="1315" height="591" alt="money4" src="https://github.com/user-attachments/assets/984673e2-6c2c-4627-b95d-c099bd5d3908" />
+<img width="1346" height="629" alt="money5" src="https://github.com/user-attachments/assets/0593a14e-5288-4fc6-9371-bdf103a4c7cb" />
+<img width="1322" height="529" alt="money6" src="https://github.com/user-attachments/assets/4364722f-e489-4bb3-b34a-e783a2f06308" />
+<img width="1316" height="844" alt="money7" src="https://github.com/user-attachments/assets/d4e0ce16-dcf2-4d8f-a6ac-03f87709aa87" />
+<img width="1236" height="873" alt="money8" src="https://github.com/user-attachments/assets/6d6551b7-9719-4c6e-a38a-bde757376b7d" />
+
+
 ## Features
 
 ### 🔐 User Authentication
@@ -159,4 +170,5 @@ This project is open source and available under the MIT License.
 **Author: Roberto Raimondo - IS Senior Systems Engineer II**
 
 © 2025 All Rights Reserved.
+
 
