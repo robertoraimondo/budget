@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Money Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Dashboard</h1>
+            <div>
+                <button type="button" class="btn btn-outline-danger" onclick="confirmCompleteReset()">
+                    <i class="fas fa-redo me-1"></i>Reset All Assets
+                </button>
+                <form id="resetAssetsForm" method="POST" action="{{ url_for('reset_assets') }}" style="display: none;">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>${{ "%.2f"|format(total_balance) }}</h4>
+                        <p class="mb-0">Total Balance</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-wallet fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_accounts }}</h4>
+                        <p class="mb-0">Accounts</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-university fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ recent_transactions|length }}</h4>
+                        <p class="mb-0">Recent Transactions</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exchange-alt fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ monthly_expenses|length }}</h4>
+                        <p class="mb-0">Expense Categories</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-chart-pie fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Recent Transactions</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_transactions %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in recent_transactions %}
+                                <tr>
+                                    <td>{{ transaction.date.strftime('%m/%d') }}</td>
+                                    <td>{{ transaction.description[:30] }}{% if transaction.description|length > 30 %}...{% endif %}</td>
+                                    <td class="{% if transaction.type == 'income' %}text-success{% elif transaction.type == 'expense' %}text-danger{% endif %}">
+                                        {% if transaction.type == 'income' %}+{% elif transaction.type == 'expense' %}-{% endif %}${{ "%.2f"|format(transaction.amount) }}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{% if transaction.type == 'income' %}success{% elif transaction.type == 'expense' %}danger{% else %}secondary{% endif %}">
+                                            {{ transaction.type.title() }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center">
+                        <a href="{{ url_for('transactions') }}" class="btn btn-sm btn-outline-primary">View All Transactions</a>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">No transactions found.</p>
+                    <div class="text-center">
+                        <a href="{{ url_for('add_transaction') }}" class="btn btn-primary">Add First Transaction</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Monthly Expenses by Category</h5>
+            </div>
+            <div class="card-body">
+                {% if monthly_expenses %}
+                    <canvas id="expenseChart" width="400" height="200"></canvas>
+                {% else %}
+                    <p class="text-muted text-center">No expenses this month.</p>
+                    <div class="text-center">
+                        <a href="{{ url_for('add_transaction') }}" class="btn btn-primary">Add Expense</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Monthly Spending Trend</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyTrendChart" width="400" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Expense Pie Chart
+{% if monthly_expenses %}
+const expenseCtx = document.getElementById('expenseChart').getContext('2d');
+const expenseChart = new Chart(expenseCtx, {
+    type: 'pie',
+    data: {
+        labels: [{% for category, amount in monthly_expenses %}'{{ category }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for category, amount in monthly_expenses %}{{ amount }}{% if not loop.last %},{% endif %}{% endfor %}],
+            backgroundColor: [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+{% endif %}
+
+// Monthly Trend Chart
+fetch('/api/monthly-spending')
+    .then(response => response.json())
+    .then(data => {
+        const trendCtx = document.getElementById('monthlyTrendChart').getContext('2d');
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        
+        const trendChart = new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: data.map(item => monthNames[item.month - 1]),
+                datasets: [{
+                    label: 'Monthly Spending',
+                    data: data.map(item => item.spending),
+                    borderColor: '#36A2EB',
+                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toFixed(2);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+
+    // Enhanced reset confirmation function
+    function confirmCompleteReset() {
+        // Step 1: Initial warning
+        const step1 = confirm(
+            "⚠️ COMPLETE DATABASE RESET ⚠️\n\n" +
+            "You are about to PERMANENTLY DELETE EVERYTHING!\n\n" +
+            "This includes:\n" +
+            "• ALL USERS (including yourself)\n" +
+            "• All accounts and balances\n" +
+            "• All transactions and history\n" +
+            "• All investments\n" +
+            "• All categories\n" +
+            "• All budgets\n\n" +
+            "You will be LOGGED OUT immediately!\n" +
+            "This action CANNOT be undone!\n\n" +
+            "Do you want to continue?"
+        );
+        
+        if (!step1) return;
+        
+        // Step 2: Type confirmation
+        const confirmText = prompt(
+            "⚠️ FINAL WARNING ⚠️\n\n" +
+            "To confirm this PERMANENT deletion, please type exactly:\n" +
+            "DELETE ALL MY DATA\n\n" +
+            "Type it exactly as shown above:"
+        );
+        
+        if (confirmText !== "DELETE ALL MY DATA") {
+            if (confirmText !== null) { // Only show if user didn't cancel
+                alert("❌ Confirmation text didn't match. Reset cancelled for your protection.");
+            }
+            return;
+        }
+        
+        // Step 3: Final confirmation
+        const finalConfirm = confirm(
+            "🔥 LAST CHANCE 🔥\n\n" +
+            "You typed the confirmation correctly.\n\n" +
+            "Are you 100% ABSOLUTELY CERTAIN you want to:\n" +
+            "RESET THE ENTIRE DATABASE AND DELETE ALL USERS?\n\n" +
+            "Click OK to DELETE EVERYTHING & LOG OUT\n" +
+            "Click Cancel to keep your data safe"
+        );
+        
+        if (finalConfirm) {
+            // Submit the hidden form
+            document.getElementById('resetAssetsForm').submit();
+        } else {
+            alert("✅ Reset cancelled. Your data is safe!");
+        }
+    }
+</script>
+{% endblock %}

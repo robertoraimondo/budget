@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Available Budget - Money Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Available Budget - {{ datetime.now().strftime('%B %Y') }}</h1>
+</div>
+
+{% if budget_data.monthly_budget %}
+<!-- Budget vs Actual Summary -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Income Comparison</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td><strong>Available Income:</strong></td>
+                                <td class="text-end text-success">${{ "%.2f"|format(budget_data.monthly_budget.budgeted_income) }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Actual Income:</strong></td>
+                                <td class="text-end text-success">${{ "%.2f"|format(budget_data.actual_income) }}</td>
+                            </tr>
+                            <tr class="table-info">
+                                <td><strong>Variance:</strong></td>
+                                <td class="text-end {% if budget_data.income_variance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {% if budget_data.income_variance >= 0 %}+{% endif %}"%.2f"|format(budget_data.income_variance) }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Expense Comparison</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td><strong>Available Expenses:</strong></td>
+                                <td class="text-end text-danger">${{ "%.2f"|format(budget_data.monthly_budget.budgeted_expenses) }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Actual Expenses:</strong></td>
+                                <td class="text-end text-danger">${{ "%.2f"|format(budget_data.actual_expenses) }}</td>
+                            </tr>
+                            <tr class="table-info">
+                                <td><strong>Variance:</strong></td>
+                                <td class="text-end {% if budget_data.expense_variance <= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {% if budget_data.expense_variance >= 0 %}+{% endif %}"%.2f"|format(budget_data.expense_variance) }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Net Income Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h5>Available Net Income</h5>
+                <h3>${{ "%.2f"|format(budget_data.monthly_budget.budgeted_net) }}</h3>
+                <small>(Income - Expenses)</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h5>Actual Net Income</h5>
+                <h3>${{ "%.2f"|format(budget_data.actual_net) }}</h3>
+                <small>({{ "%.2f"|format(budget_data.actual_income) }} - {{ "%.2f"|format(budget_data.actual_expenses) }})</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card {% if budget_data.net_variance >= 0 %}bg-success{% else %}bg-warning{% endif %} text-white">
+            <div class="card-body text-center">
+                <h5>Net Variance</h5>
+                <h3>{% if budget_data.net_variance >= 0 %}+{% endif %}"%.2f"|format(budget_data.net_variance) }}</h3>
+                <small>{% if budget_data.net_variance >= 0 %}Above Budget{% else %}Below Budget{% endif %}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Progress Bars -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Budget Performance</h5>
+    </div>
+    <div class="card-body">
+        <!-- Income Progress -->
+        <div class="mb-3">
+            <div class="d-flex justify-content-between">
+                <span><strong>Income Progress</strong></span>
+                <span>{{ "%.1f"|format((budget_data.actual_income / budget_data.monthly_budget.budgeted_income * 100) if budget_data.monthly_budget.budgeted_income > 0 else 0) }}%</span>
+            </div>
+            {% set income_percent = (budget_data.actual_income / budget_data.monthly_budget.budgeted_income * 100) if budget_data.monthly_budget.budgeted_income > 0 else 0 %}
+            <div class="progress" style="height: 25px;">
+                <div class="progress-bar {% if income_percent >= 100 %}bg-success{% elif income_percent >= 75 %}bg-info{% else %}bg-warning{% endif %}" 
+                     role="progressbar" 
+                     style="width: {{ income_percent if income_percent <= 100 else 100 }}%">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Expense Progress -->
+        <div class="mb-3">
+            <div class="d-flex justify-content-between">
+                <span><strong>Expense Control</strong></span>
+                <span>{{ "%.1f"|format((budget_data.actual_expenses / budget_data.monthly_budget.budgeted_expenses * 100) if budget_data.monthly_budget.budgeted_expenses > 0 else 0) }}%</span>
+            </div>
+            {% set expense_percent = (budget_data.actual_expenses / budget_data.monthly_budget.budgeted_expenses * 100) if budget_data.monthly_budget.budgeted_expenses > 0 else 0 %}
+            <div class="progress" style="height: 25px;">
+                <div class="progress-bar {% if expense_percent <= 80 %}bg-success{% elif expense_percent <= 100 %}bg-warning{% else %}bg-danger{% endif %}" 
+                     role="progressbar" 
+                     style="width: {{ expense_percent if expense_percent <= 100 else 100 }}%">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- No Budget Set - Show Actual Data -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Financial activity for {{ datetime.now().strftime('%B %Y') }}</strong>
+                    - Real-time income and expense tracking
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actual Financial Activity Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h5>Actual Income</h5>
+                <h3>${{ "%.2f"|format(budget_data.actual_income) }}</h3>
+                <small>Money earned this month</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <h5>Actual Expenses</h5>
+                <h3>${{ "%.2f"|format(budget_data.actual_expenses) }}</h3>
+                <small>Money spent this month</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card {% if budget_data.actual_net >= 0 %}bg-info{% else %}bg-warning{% endif %} text-white">
+            <div class="card-body text-center">
+                <h5>Net Cash Flow</h5>
+                <h3>${{ "%.2f"|format(budget_data.actual_net) }}</h3>
+                <small>{% if budget_data.actual_net >= 0 %}Positive flow{% else %}Negative flow{% endif %}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if budget_data.actual_income > 0 or budget_data.actual_expenses > 0 %}
+<!-- Financial Summary -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">{{ datetime.now().strftime('%B %Y') }} Financial Summary</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="text-success">Income Details</h6>
+                <p class="mb-1">Total income earned: <strong>${{ "%.2f"|format(budget_data.actual_income) }}</strong></p>
+                {% if budget_data.actual_income > 0 %}
+                <small class="text-muted">Great job earning money this month!</small>
+                {% else %}
+                <small class="text-muted">No income recorded yet this month.</small>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-danger">Expense Details</h6>
+                <p class="mb-1">Total expenses: <strong>${{ "%.2f"|format(budget_data.actual_expenses) }}</strong></p>
+                {% if budget_data.actual_expenses > 0 %}
+                <small class="text-muted">Money spent on various categories.</small>
+                {% else %}
+                <small class="text-muted">No expenses recorded yet this month.</small>
+                {% endif %}
+            </div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-12 text-center">
+                <h6>{% if budget_data.actual_net >= 0 %}🎉 Positive Cash Flow{% else %}⚠️ Negative Cash Flow{% endif %}</h6>
+                <p class="{% if budget_data.actual_net >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    {% if budget_data.actual_net >= 0 %}
+                    You're doing great! You've earned ${{ "%.2f"|format(budget_data.actual_net) }} more than you've spent.
+                    {% else %}
+                    You've spent ${{ "%.2f"|format(budget_data.actual_net|abs) }} more than you've earned. Consider setting a budget to track your goals.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<!-- No Activity Yet -->
+<div class="text-center mt-5">
+    <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+    <h4 class="text-muted">No financial activity yet for {{ datetime.now().strftime('%B %Y') }}</h4>
+    <p class="text-muted">Start by adding some income or expense transactions to see your financial activity.</p>
+    <div class="mt-4">
+        <a href="{{ url_for('add_transaction') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Add Transaction
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

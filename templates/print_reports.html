@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Report - Money Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .page-break { page-break-after: always; }
+            body { font-size: 12pt; }
+            .card { border: 1px solid #ddd !important; box-shadow: none !important; }
+            .table { font-size: 11pt; }
+            h1 { font-size: 24pt; }
+            h2 { font-size: 18pt; }
+            h3 { font-size: 16pt; }
+            h4 { font-size: 14pt; }
+            .btn { display: none; }
+            .container-fluid { max-width: 100%; }
+        }
+        
+        @media screen {
+            body { background-color: #f8f9fa; padding: 20px; }
+            .container-fluid { max-width: 1200px; margin: 0 auto; }
+        }
+        
+        .report-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 20px;
+        }
+        
+        .summary-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .amount-positive { color: #198754; font-weight: bold; }
+        .amount-negative { color: #dc3545; font-weight: bold; }
+        .amount-neutral { color: #6c757d; font-weight: bold; }
+        
+        .section-title {
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: #495057;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Print Controls (hidden in print) -->
+        <div class="no-print mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{{ url_for('reports') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Reports
+                </a>
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="fas fa-print me-1"></i>Print Report
+                </button>
+            </div>
+        </div>
+
+        <!-- Report Header -->
+        <div class="report-header">
+            <h1><i class="fas fa-chart-line me-2"></i>Money Tracker Financial Report</h1>
+            <p class="text-muted mb-0">Generated on {{ report_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+            <p class="text-muted">Report Period: {{ current_month }}/{{ current_year }} | User: {{ current_user.username }}</p>
+        </div>
+
+        <!-- Executive Summary -->
+        <div class="row">
+            <div class="col-12">
+                <h2 class="section-title">Executive Summary</h2>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="summary-card text-center">
+                    <h5>Net Worth</h5>
+                    <h3 class="{% if net_worth >= 0 %}amount-positive{% else %}amount-negative{% endif %}">
+                        ${{ "{:,.2f}".format(net_worth) }}
+                    </h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="summary-card text-center">
+                    <h5>Total Assets</h5>
+                    <h3 class="amount-positive">${{ "{:,.2f}".format(total_assets) }}</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="summary-card text-center">
+                    <h5>Total Liabilities</h5>
+                    <h3 class="amount-negative">${{ "{:,.2f}".format(total_liabilities) }}</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="summary-card text-center">
+                    <h5>Monthly Net</h5>
+                    <h3 class="{% if month_net >= 0 %}amount-positive{% else %}amount-negative{% endif %}">
+                        ${{ "{:,.2f}".format(month_net) }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Balances -->
+        <div class="row">
+            <div class="col-12">
+                <h2 class="section-title">Account Balances</h2>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Account Name</th>
+                                <th>Type</th>
+                                <th>Bank</th>
+                                <th>Account Number</th>
+                                <th class="text-end">Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for account in accounts %}
+                            <tr>
+                                <td><strong>{{ account.name }}</strong></td>
+                                <td><span class="badge bg-info">{{ account.account_type.title() }}</span></td>
+                                <td>{{ account.bank_name or '-' }}</td>
+                                <td>{{ account.get_masked_account_number() or '-' }}</td>
+                                <td class="text-end {% if account.balance >= 0 %}amount-positive{% else %}amount-negative{% endif %}">
+                                    ${{ "{:,.2f}".format(account.balance) }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-secondary">
+                            <tr>
+                                <th colspan="4">Net Worth</th>
+                                <th class="text-end {% if net_worth >= 0 %}amount-positive{% else %}amount-negative{% endif %}">
+                                    ${{ "{:,.2f}".format(net_worth) }}
+                                </th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Break for Print -->
+        <div class="page-break"></div>
+
+        <!-- Monthly Income vs Expenses -->
+        <div class="row">
+            <div class="col-12">
+                <h2 class="section-title">Current Month Summary ({{ current_month }}/{{ current_year }})</h2>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="summary-card text-center">
+                    <h5>Monthly Income</h5>
+                    <h3 class="amount-positive">${{ "{:,.2f}".format(month_income) }}</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="summary-card text-center">
+                    <h5>Monthly Expenses</h5>
+                    <h3 class="amount-negative">${{ "{:,.2f}".format(month_expenses) }}</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="summary-card text-center">
+                    <h5>Monthly Net</h5>
+                    <h3 class="{% if month_net >= 0 %}amount-positive{% else %}amount-negative{% endif %}">
+                        ${{ "{:,.2f}".format(month_net) }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Spending -->
+        {% if category_spending %}
+        <div class="row">
+            <div class="col-12">
+                <h3>Expenses by Category (Current Month)</h3>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Category</th>
+                                <th class="text-end">Amount</th>
+                                <th class="text-end">% of Total Expenses</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category_name, amount in category_spending %}
+                            <tr>
+                                <td>{{ category_name }}</td>
+                                <td class="text-end amount-negative">${{ "{:,.2f}".format(amount) }}</td>
+                                <td class="text-end">{{ "{:.1f}%".format((amount/month_expenses)*100) if month_expenses > 0 else "0%" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Recent Transactions -->
+        {% if current_month_transactions %}
+        <div class="row">
+            <div class="col-12">
+                <h3>Recent Transactions (Current Month)</h3>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Account</th>
+                                <th class="text-end">Amount</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in current_month_transactions[:20] %}
+                            <tr>
+                                <td>{{ transaction.date.strftime('%m/%d/%Y') }}</td>
+                                <td>{{ transaction.description }}</td>
+                                <td>
+                                    {% if transaction.category %}
+                                        {{ transaction.category.name }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ transaction.account.name }}</td>
+                                <td class="text-end {% if transaction.type == 'income' %}amount-positive{% elif transaction.type == 'expense' %}amount-negative{% endif %}">
+                                    {% if transaction.type == 'income' %}+{% elif transaction.type == 'expense' %}-{% endif %}${{ "{:,.2f}".format(transaction.amount) }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if transaction.type == 'income' %}success{% elif transaction.type == 'expense' %}danger{% else %}secondary{% endif %}">
+                                        {{ transaction.type.title() }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% if current_month_transactions|length > 20 %}
+                    <p class="text-muted text-center mt-2">
+                        <em>Showing 20 most recent transactions. Total: {{ current_month_transactions|length }} transactions this month.</em>
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Investments -->
+        {% if investments %}
+        <div class="page-break"></div>
+        <div class="row">
+            <div class="col-12">
+                <h2 class="section-title">Investment Portfolio</h2>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Symbol</th>
+                                <th>Company Name</th>
+                                <th>Account</th>
+                                <th class="text-end">Shares</th>
+                                <th class="text-end">Purchase Price</th>
+                                <th class="text-end">Current Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for investment in investments %}
+                            <tr>
+                                <td><strong>{{ investment.symbol }}</strong></td>
+                                <td>{{ investment.name }}</td>
+                                <td>{{ investment.account.name }}</td>
+                                <td class="text-end">{{ "{:,.2f}".format(investment.shares) }}</td>
+                                <td class="text-end">${{ "{:,.2f}".format(investment.purchase_price) }}</td>
+                                <td class="text-end amount-neutral">${{ "{:,.2f}".format(investment.current_value) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Report Footer -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="text-center text-muted">
+                    <hr>
+                    <p><em>This report was generated by Money Tracker on {{ report_date.strftime('%B %d, %Y at %I:%M %p') }}</em></p>
+                    <p><small>Money Tracker - Your Personal Finance Management Solution</small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

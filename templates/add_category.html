@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Add Category - Money Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Add New Category</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Category Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="type" class="form-label">Category Type</label>
+                        <select class="form-select" id="type" name="type" required>
+                            <option value="">Select type</option>
+                            <option value="income">Income</option>
+                            <option value="expense">Expense</option>
+                            <option value="investment">Investment</option>
+                        </select>
+                        <div class="form-text">
+                            <strong>Income:</strong> Sources of money coming in<br>
+                            <strong>Expense:</strong> Money going out for purchases<br>
+                            <strong>Investment:</strong> Money allocated to investments
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('categories') }}" class="btn btn-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Add Category</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

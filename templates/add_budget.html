@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Available Budget - Money Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Set Available Budget (Income vs Expenses)</h5>
+                <small class="text-muted">Plan your available income and expenses to track cash flow</small>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <!-- Month and Year Selection -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="month" class="form-label">Month</label>
+                                <select class="form-select" id="month" name="month" required>
+                                    {% for i in range(1, 13) %}
+                                    <option value="{{ i }}" {% if i == current_month %}selected{% endif %}>
+                                        {{ datetime(2023, i, 1).strftime('%B') }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="year" class="form-label">Year</label>
+                                <select class="form-select" id="year" name="year" required>
+                                    {% for year in range(2020, 2030) %}
+                                    <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Income and Expense Budget -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Expected Income</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="budgeted_income" class="form-label">Total Available Income</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" step="0.01" min="0" class="form-control" 
+                                                   id="budgeted_income" name="budgeted_income" 
+                                                   placeholder="0.00" required>
+                                        </div>
+                                        <small class="form-text text-muted">
+                                            Include salary, freelance income, investments, etc.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-header bg-danger text-white">
+                                    <h6 class="mb-0"><i class="fas fa-minus-circle me-2"></i>Expected Expenses</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="budgeted_expenses" class="form-label">Total Available Expenses</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" step="0.01" min="0" class="form-control" 
+                                                   id="budgeted_expenses" name="budgeted_expenses" 
+                                                   placeholder="0.00" required>
+                                        </div>
+                                        <small class="form-text text-muted">
+                                            Include rent, groceries, utilities, entertainment, etc.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Net Income Preview -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h6>Projected Net Income (Income - Expenses)</h6>
+                                    <h4 id="net-income-preview">$0.00</h4>
+                                    <small id="net-income-status">Enter amounts above to see projection</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        This will set your overall available budget. You can track actual income and expenses against these targets.
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('budget') }}" class="btn btn-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Available Budget</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const incomeInput = document.getElementById('budgeted_income');
+    const expensesInput = document.getElementById('budgeted_expenses');
+    const netPreview = document.getElementById('net-income-preview');
+    const netStatus = document.getElementById('net-income-status');
+    
+    function updateNetIncome() {
+        const income = parseFloat(incomeInput.value) || 0;
+        const expenses = parseFloat(expensesInput.value) || 0;
+        const net = income - expenses;
+        
+        netPreview.textContent = '$' + net.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        
+        if (net > 0) {
+            netPreview.parentElement.className = 'card-body text-center bg-success';
+            netStatus.textContent = 'Positive cash flow - you\'re saving money!';
+        } else if (net < 0) {
+            netPreview.parentElement.className = 'card-body text-center bg-danger';
+            netStatus.textContent = 'Negative cash flow - expenses exceed income';
+        } else {
+            netPreview.parentElement.className = 'card-body text-center bg-primary';
+            netStatus.textContent = 'Break-even budget';
+        }
+    }
+    
+    incomeInput.addEventListener('input', updateNetIncome);
+    expensesInput.addEventListener('input', updateNetIncome);
+});
+</script>
+{% endblock %}

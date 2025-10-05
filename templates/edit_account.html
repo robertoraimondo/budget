@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Account - Money Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Edit Account: {{ account.name }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Account Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ account.name }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="account_type" class="form-label">Account Type</label>
+                        <select class="form-select" id="account_type" name="account_type" required>
+                            <option value="">Select account type</option>
+                            <option value="checking" {% if account.account_type == 'checking' %}selected{% endif %}>Checking</option>
+                            <option value="savings" {% if account.account_type == 'savings' %}selected{% endif %}>Savings</option>
+                            <option value="investment" {% if account.account_type == 'investment' %}selected{% endif %}>Investment</option>
+                            <option value="credit" {% if account.account_type == 'credit' %}selected{% endif %}>Credit Card</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Bank Information Section -->
+                    <div class="mb-3">
+                        <label for="routing_number" class="form-label">Bank Routing Number (Optional)</label>
+                        <input type="text" class="form-control" id="routing_number" name="routing_number" maxlength="9" placeholder="123456789" value="{{ account.routing_number or '' }}">
+                        <div class="form-text">9-digit routing number for automatic bank identification</div>
+                        <div id="bank-info" class="mt-2" style="display: none;">
+                            <div class="alert alert-info">
+                                <strong id="bank-name"></strong><br>
+                                <small id="bank-region"></small>
+                            </div>
+                        </div>
+                        <div id="routing-error" class="text-danger mt-1" style="display: none;"></div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="bank_name" class="form-label">Bank Name (Optional)</label>
+                        <input type="text" class="form-control" id="bank_name" name="bank_name" placeholder="Will be auto-filled from routing number" value="{{ account.bank_name or '' }}">
+                        <div class="form-text">This will be automatically filled if you enter a routing number</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="account_number" class="form-label">Account Number (Optional)</label>
+                        <input type="text" class="form-control" id="account_number" name="account_number" placeholder="Enter full account number" value="{{ account.account_number_full if account.account_number_full else '' }}">
+                        <div class="form-text">
+                            <i class="fas fa-shield-alt text-warning me-1"></i>
+                            Full account number will be stored securely. Only last 4 digits will be displayed in lists.
+                            {% if account.get_masked_account_number() %}
+                                <br><strong>Current:</strong> {{ account.get_masked_account_number() }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="balance" class="form-label">Current Balance</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.01" class="form-control" id="balance" name="balance" value="{{ '%.2f'|format(account.balance) }}">
+                        </div>
+                        <div class="form-text">Enter negative amount for credit card debt</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('account_detail', account_id=account.id) }}" class="btn btn-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Update Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const routingInput = document.getElementById('routing_number');
+    const bankNameInput = document.getElementById('bank_name');
+    const bankInfo = document.getElementById('bank-info');
+    const bankNameDisplay = document.getElementById('bank-name');
+    const bankRegionDisplay = document.getElementById('bank-region');
+    const routingError = document.getElementById('routing-error');
+    
+    let lookupTimeout;
+    
+    // Check if routing number exists on page load and lookup bank info
+    if (routingInput.value && routingInput.value.length === 9) {
+        lookupBank(routingInput.value);
+    }
+    
+    routingInput.addEventListener('input', function() {
+        const routingNumber = this.value.replace(/\D/g, ''); // Remove non-digits
+        this.value = routingNumber; // Update input with cleaned value
+        
+        // Clear previous timeout
+        clearTimeout(lookupTimeout);
+        
+        // Hide previous results
+        bankInfo.style.display = 'none';
+        routingError.style.display = 'none';
+        
+        if (routingNumber.length === 9) {
+            // Add a small delay to avoid too many API calls
+            lookupTimeout = setTimeout(() => {
+                lookupBank(routingNumber);
+            }, 500);
+        } else if (routingNumber.length > 9) {
+            // Trim to 9 digits
+            this.value = routingNumber.substring(0, 9);
+            lookupBank(this.value);
+        } else {
+            // Clear bank name if routing number is incomplete (only if it was auto-filled)
+            if (bankNameInput.dataset.autoFilled === 'true') {
+                bankNameInput.value = '';
+                bankNameInput.dataset.autoFilled = 'false';
+            }
+        }
+    });
+    
+    function lookupBank(routingNumber) {
+        fetch(`/api/lookup-bank/${routingNumber}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.valid && data.bank_name) {
+                    // Display bank information
+                    bankNameDisplay.textContent = data.bank_name;
+                    bankRegionDisplay.textContent = `Region: ${data.region}`;
+                    bankInfo.style.display = 'block';
+                    
+                    // Auto-fill bank name only if it's empty or was previously auto-filled
+                    if (!bankNameInput.value || bankNameInput.dataset.autoFilled === 'true') {
+                        bankNameInput.value = data.bank_name;
+                        bankNameInput.dataset.autoFilled = 'true';
+                    }
+                    
+                    // Add success styling
+                    routingInput.classList.remove('is-invalid');
+                    routingInput.classList.add('is-valid');
+                } else {
+                    // Show error
+                    routingError.textContent = data.error || 'Bank not found for this routing number';
+                    routingError.style.display = 'block';
+                    routingInput.classList.remove('is-valid');
+                    routingInput.classList.add('is-invalid');
+                    
+                    // Clear bank name only if it was auto-filled
+                    if (bankNameInput.dataset.autoFilled === 'true') {
+                        bankNameInput.value = '';
+                        bankNameInput.dataset.autoFilled = 'false';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error looking up bank:', error);
+                routingError.textContent = 'Error looking up bank information';
+                routingError.style.display = 'block';
+                routingInput.classList.remove('is-valid');
+                routingInput.classList.add('is-invalid');
+            });
+    }
+    
+    // Handle full account number input
+    const accountNumberInput = document.getElementById('account_number');
+    
+    if (accountNumberInput) {
+        accountNumberInput.addEventListener('input', function() {
+            console.log('Account number updated');
+        });
+    }
+});
+</script>
+{% endblock %}

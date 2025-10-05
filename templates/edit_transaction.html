@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Transaction - Money Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Edit Transaction: {{ transaction.description }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="date" class="form-label">Date</label>
+                                <input type="date" class="form-control" id="date" name="date" value="{{ transaction.date.strftime('%Y-%m-%d') }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="type" class="form-label">Type</label>
+                                <select class="form-select" id="type" name="type" required>
+                                    <option value="">Select type</option>
+                                    <option value="income" {% if transaction.type == 'income' %}selected{% endif %}>Income</option>
+                                    <option value="expense" {% if transaction.type == 'expense' %}selected{% endif %}>Expense</option>
+                                    <option value="transfer" {% if transaction.type == 'transfer' %}selected{% endif %}>Transfer</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="description" name="description" value="{{ transaction.description }}" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="amount" class="form-label">Amount</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" step="0.01" class="form-control" id="amount" name="amount" value="{{ '%.2f'|format(transaction.amount) }}" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="account_id" class="form-label">Account</label>
+                                <select class="form-select" id="account_id" name="account_id" required>
+                                    <option value="">Select account</option>
+                                    {% for account in accounts %}
+                                    <option value="{{ account.id }}" {% if account.id == transaction.account_id %}selected{% endif %}>{{ account.name }} ({{ account.account_type.title() }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="category_id" class="form-label">Category</label>
+                        <select class="form-select" id="category_id" name="category_id">
+                            <option value="">Select category (optional)</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}" data-type="{{ category.type }}" {% if category.id == transaction.category_id %}selected{% endif %}>{{ category.name }} ({{ category.type.title() }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> Editing this transaction will automatically adjust account balances. 
+                        The previous transaction effect will be reversed and the new transaction will be applied.
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('transactions') }}" class="btn btn-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Update Transaction</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Filter categories based on transaction type
+document.getElementById('type').addEventListener('change', function() {
+    const selectedType = this.value;
+    const categorySelect = document.getElementById('category_id');
+    const options = categorySelect.querySelectorAll('option[data-type]');
+    
+    options.forEach(option => {
+        if (selectedType === '' || option.dataset.type === selectedType) {
+            option.style.display = '';
+        } else {
+            option.style.display = 'none';
+        }
+    });
+    
+    // Reset category selection if current selection is hidden
+    const currentCategory = categorySelect.querySelector('option:checked');
+    if (currentCategory && currentCategory.dataset.type && currentCategory.dataset.type !== selectedType) {
+        categorySelect.value = '';
+    }
+});
+
+// Trigger the filtering on page load to show appropriate categories
+document.addEventListener('DOMContentLoaded', function() {
+    const typeSelect = document.getElementById('type');
+    if (typeSelect.value) {
+        typeSelect.dispatchEvent(new Event('change'));
+    }
+});
+</script>
+{% endblock %}

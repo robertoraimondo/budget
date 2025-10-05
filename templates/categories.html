@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Categories - Money Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Categories</h1>
+    <a href="{{ url_for('add_category') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>Add Category
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Income Categories</h5>
+            </div>
+            <div class="card-body">
+                {% set income_categories = categories|selectattr('type', 'equalto', 'income')|list %}
+                {% if income_categories %}
+                    <ul class="list-group list-group-flush">
+                        {% for category in income_categories %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>{{ category.name }}</span>
+                            <div>
+                                <span class="badge bg-success rounded-pill me-2">{{ category.transactions|length }}</span>
+                                <form method="POST" action="{{ url_for('delete_category', category_id=category.id) }}" class="d-inline">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Delete category" onclick="confirmDeleteCategory('{{ category.name }}', this.form)">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted text-center">No income categories</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Expense Categories</h5>
+            </div>
+            <div class="card-body">
+                {% set expense_categories = categories|selectattr('type', 'equalto', 'expense')|list %}
+                {% if expense_categories %}
+                    <ul class="list-group list-group-flush">
+                        {% for category in expense_categories %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>{{ category.name }}</span>
+                            <div>
+                                <span class="badge bg-danger rounded-pill me-2">{{ category.transactions|length }}</span>
+                                <form method="POST" action="{{ url_for('delete_category', category_id=category.id) }}" class="d-inline">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Delete category" onclick="confirmDeleteCategory('{{ category.name }}', this.form)">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted text-center">No expense categories</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Investment Categories</h5>
+            </div>
+            <div class="card-body">
+                {% set investment_categories = categories|selectattr('type', 'equalto', 'investment')|list %}
+                {% if investment_categories %}
+                    <ul class="list-group list-group-flush">
+                        {% for category in investment_categories %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>{{ category.name }}</span>
+                            <div>
+                                <span class="badge bg-primary rounded-pill me-2">{{ category.transactions|length }}</span>
+                                <form method="POST" action="{{ url_for('delete_category', category_id=category.id) }}" class="d-inline">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Delete category" onclick="confirmDeleteCategory('{{ category.name }}', this.form)">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted text-center">No investment categories</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if not categories %}
+<div class="text-center mt-5">
+    <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+    <h3 class="text-muted">No categories found</h3>
+    <p class="text-muted">Start by adding categories to organize your transactions</p>
+    <a href="{{ url_for('add_category') }}" class="btn btn-primary">Add Category</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function confirmDeleteCategory(categoryName, form) {
+    if (confirm(`Are you sure you want to delete the category "${categoryName}"?\n\nThis action cannot be undone and will only work if the category has no associated transactions or budgets.`)) {
+        form.submit();
+    }
+    return false;
+}
+</script>
+{% endblock %}

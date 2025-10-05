@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Money Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Financial Reports</h1>
+            <div>
+                <a href="{{ url_for('print_reports') }}" class="btn btn-outline-primary" target="_blank">
+                    <i class="fas fa-print me-1"></i>Print Report
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Income vs Expenses (Current Year)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="incomeExpenseChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Expense Categories (Current Month)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Account Balances</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="accountBalanceChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Net Worth Summary</h5>
+            </div>
+            <div class="card-body">
+                <div id="netWorthSummary">
+                    <p class="text-center">Loading...</p>
+                </div>
+            </div>
+        </div>
+        
+
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Cash Flow (Last 6 Months)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="cashFlowChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fetch and display monthly spending data
+    fetch('/api/monthly-spending')
+        .then(response => response.json())
+        .then(data => {
+            // Income vs Expenses Chart
+            const incomeExpenseCtx = document.getElementById('incomeExpenseChart').getContext('2d');
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            new Chart(incomeExpenseCtx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(item => monthNames[item.month - 1]),
+                    datasets: [{
+                        label: 'Expenses',
+                        data: data.map(item => item.spending),
+                        backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toFixed(2);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Cash Flow Chart (simplified version)
+            const cashFlowCtx = document.getElementById('cashFlowChart').getContext('2d');
+            const last6Months = data.slice(-6);
+            
+            new Chart(cashFlowCtx, {
+                type: 'line',
+                data: {
+                    labels: last6Months.map(item => monthNames[item.month - 1]),
+                    datasets: [{
+                        label: 'Monthly Expenses',
+                        data: last6Months.map(item => item.spending),
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toFixed(2);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+        });
+    
+    // Placeholder charts (these would need actual data from additional API endpoints)
+    
+    // Category Chart (placeholder)
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Groceries', 'Rent', 'Utilities', 'Entertainment', 'Transportation'],
+            datasets: [{
+                data: [400, 1200, 300, 200, 250],
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    
+    // Account Balance Chart (placeholder)
+    const accountBalanceCtx = document.getElementById('accountBalanceChart').getContext('2d');
+    new Chart(accountBalanceCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Checking', 'Savings', 'Investment', 'Credit Card'],
+            datasets: [{
+                label: 'Balance',
+                data: [5000, 15000, 25000, -1200],
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgba(255, 99, 132, 0.7)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Net Worth Summary - fetch real data from API
+    fetch('/api/net-worth')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('netWorthSummary').innerHTML = `
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h6 class="text-success">Assets</h6>
+                        <h4 class="text-success">$${data.assets.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h4>
+                        <small class="text-muted">Cash: $${data.cash_assets.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>
+                        Investments: $${data.investment_assets.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</small>
+                    </div>
+                    <div class="col-6">
+                        <h6 class="text-danger">Liabilities</h6>
+                        <h4 class="text-danger">$${data.liabilities.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h4>
+                    </div>
+                </div>
+                <hr>
+                <div class="text-center">
+                    <h5>Net Worth</h5>
+                    <h3 class="text-primary">$${data.net_worth.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
+                    <small class="text-muted">${data.account_count} account(s)</small>
+                </div>
+            `;
+        })
+        .catch(error => {
+            console.error('Error fetching net worth data:', error);
+            document.getElementById('netWorthSummary').innerHTML = `
+                <div class="text-center">
+                    <p class="text-danger">Error loading net worth data</p>
+                </div>
+            `;
+        });
+});
+
+
+</script>
+{% endblock %}

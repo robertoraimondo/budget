@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Accounts - Money Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Accounts</h1>
+    <div>
+        <a href="{{ url_for('add_account') }}" class="btn btn-primary me-2">
+            <i class="fas fa-plus me-1"></i>Add Account
+        </a>
+        <button type="button" class="btn btn-outline-danger" onclick="confirmCompleteReset()">
+            <i class="fas fa-redo me-1"></i>Reset All Assets
+        </button>
+        <form id="resetAssetsForm" method="POST" action="{{ url_for('reset_assets') }}" style="display: none;">
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    {% for account in accounts %}
+    <div class="col-md-6 col-lg-4 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ account.name }}</h5>
+                {% if account.bank_name or account.get_masked_account_number() %}
+                <p class="text-muted small mb-1">
+                    {% if account.bank_name %}
+                        <i class="fas fa-university me-1"></i>{{ account.bank_name }}
+                    {% endif %}
+                    {% if account.get_masked_account_number() %}
+                        {% if account.bank_name %} • {% endif %}
+                        <i class="fas fa-credit-card me-1"></i>{{ account.get_masked_account_number() }}
+                    {% endif %}
+                </p>
+                {% endif %}
+                <p class="card-text">
+                    <span class="badge bg-secondary mb-2">{{ account.account_type.title() }}</span><br>
+                    <strong class="{% if account.balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        ${{ "%.2f"|format(account.balance) }}
+                    </strong>
+                </p>
+                <small class="text-muted">
+                    {{ account.transactions|length }} transactions
+                    {% if account.routing_number %}
+                        • Routing: {{ account.routing_number }}
+                    {% endif %}
+                </small>
+                <div class="mt-2">
+                    <a href="{{ url_for('account_detail', account_id=account.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-eye me-1"></i>View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not accounts %}
+<div class="text-center mt-5">
+    <i class="fas fa-university fa-3x text-muted mb-3"></i>
+    <h3 class="text-muted">No accounts found</h3>
+    <p class="text-muted">Start by adding your first account</p>
+    <a href="{{ url_for('add_account') }}" class="btn btn-primary">Add Account</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Enhanced reset confirmation function
+function confirmCompleteReset() {
+    // Step 1: Initial warning
+    const step1 = confirm(
+        "⚠️ COMPLETE DATABASE RESET ⚠️\n\n" +
+        "You are about to PERMANENTLY DELETE EVERYTHING!\n\n" +
+        "This includes:\n" +
+        "• ALL USERS (including yourself)\n" +
+        "• All accounts and balances\n" +
+        "• All transactions and history\n" +
+        "• All investments\n" +
+        "• All categories\n" +
+        "• All budgets\n\n" +
+        "You will be LOGGED OUT immediately!\n" +
+        "This action CANNOT be undone!\n\n" +
+        "Do you want to continue?"
+    );
+    
+    if (!step1) return;
+    
+    // Step 2: Type confirmation
+    const confirmText = prompt(
+        "⚠️ FINAL WARNING ⚠️\n\n" +
+        "To confirm this PERMANENT deletion, please type exactly:\n" +
+        "DELETE ALL MY DATA\n\n" +
+        "Type it exactly as shown above:"
+    );
+    
+    if (confirmText !== "DELETE ALL MY DATA") {
+        if (confirmText !== null) { // Only show if user didn't cancel
+            alert("❌ Confirmation text didn't match. Reset cancelled for your protection.");
+        }
+        return;
+    }
+    
+    // Step 3: Final confirmation
+    const finalConfirm = confirm(
+        "🔥 LAST CHANCE 🔥\n\n" +
+        "You typed the confirmation correctly.\n\n" +
+        "Are you 100% ABSOLUTELY CERTAIN you want to:\n" +
+        "RESET THE ENTIRE DATABASE AND DELETE ALL USERS?\n\n" +
+        "Click OK to DELETE EVERYTHING & LOG OUT\n" +
+        "Click Cancel to keep your data safe"
+    );
+    
+    if (finalConfirm) {
+        // Submit the hidden form
+        document.getElementById('resetAssetsForm').submit();
+    } else {
+        alert("✅ Reset cancelled. Your data is safe!");
+    }
+}
+</script>
+{% endblock %}
