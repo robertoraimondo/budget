@@ -1,22 +1,17 @@
-
-**Author: Roberto Raimondo - IS Senior Systems Engineer II**
-
 # Money Tracker Application
 
 A comprehensive personal finance management web application built with Python Flask that helps you track investments, bank transactions, income, and monthly expenses through an intuitive web interface.
 
-<img width="1915" height="902" alt="money" src="https://github.com/user-attachments/assets/42387b8a-0ab3-44e4-aae8-a1903fa98c5d" />
-
 ## Features
 
-### � User Authentication
+### 🔐 User Authentication
 - Secure user registration and login system
 - Password hashing for security
 - Session management with Flask-Login
 - User-specific data isolation
 - Automatic default categories for new users
 
-### �📊 Dashboard
+### 📊 Dashboard
 - Overview of total account balances
 - Recent transactions summary
 - Monthly expense breakdown by category
@@ -57,9 +52,6 @@ A comprehensive personal finance management web application built with Python Fl
 - Net worth calculations
 - Cash flow analysis
 
-<img width="1324" height="850" alt="money1" src="https://github.com/user-attachments/assets/1aa3c1a7-35a3-4fb8-9c6b-f556e8517205" />
-
-
 ## Technology Stack
 
 - **Backend:** Python Flask with Flask-Login for authentication
@@ -92,70 +84,11 @@ A comprehensive personal finance management web application built with Python Fl
    ```
 
 5. **Access the application:**
-   Open your browser and navigate to `http://localhost:5000`
-
-## Database Management
-
-The application includes database management tools:
-
-### Reset Database (Start Fresh)
-If you encounter database schema issues or want to start over:
-```powershell
-python db_manager.py
-```
-Then choose option 3 to reset the database.
-
-### Manual Database Reset
-Alternatively, you can manually delete the database file:
-```powershell
-Remove-Item budget.db
-```
-The application will create a new database with the correct schema on next startup.
-
-### Database Migration
-For existing databases, run the migration script:
-```powershell
-python migrate_db.py
-```
-
-## Troubleshooting
-
-### Database Schema Errors
-If you encounter errors like "no such column" or "OperationalError":
-
-**Quick Fix:**
-```powershell
-python reset_db.py
-python app.py
-```
-
-**Alternative:**
-```powershell
-python db_manager.py
-# Choose option 3 to reset database
-```
-
-### Common Issues
-- **"no such column: account.user_id"** → Database schema mismatch, reset database
-- **"table category has no column named user_id"** → Run database reset
-- **Cannot create user** → Ensure database is properly initialized
-
-### Starting Fresh
-If you want to completely start over:
-1. Run `python reset_db.py` 
-2. Start the application with `python app.py`
-3. Register a new user account
-4. Begin tracking your finances
+   Open your browser and go to your production server URL. See `run_production.bat` for details.
 
 ## Database
 
 The application uses SQLite database that will be automatically created when you first run the app. Sample data including default categories and accounts will be populated on the first run.
-
-### Database Models
-
-- **User:** User accounts with authentication
-- **Account:** Bank accounts, credit cards, investment accounts (user-specific)
-- **Category:** Income, expense, and investment categories (user-specific)
 - **Transaction:** Individual financial transactions
 - **Investment:** Stock and investment holdings
 - **MonthlyBudget:** Monthly budget allocations by category
@@ -172,37 +105,36 @@ The application uses SQLite database that will be automatically created when you
 6. **Set Budgets:** Create monthly budgets to track spending goals
 7. **Review Reports:** Use the reports section to analyze your financial trends
 
-### Key Features
-
-- **Responsive Design:** Works on desktop and mobile devices
-- **Real-time Updates:** Account balances update automatically with transactions
-- **Data Visualization:** Interactive charts for better insights
-- **Easy Navigation:** Intuitive menu system for quick access to all features
-
 ## File Structure
 
 ```
 budget/
 ├── app.py                 # Main Flask application
 ├── requirements.txt       # Python dependencies
-├── budget.db             # SQLite database (created automatically)
-├── templates/            # HTML templates
-│   ├── base.html         # Base template with navigation
-│   ├── login.html        # User login form
-│   ├── register.html     # User registration form
-│   ├── dashboard.html    # Dashboard with summary and charts
-│   ├── accounts.html     # Account listing
-│   ├── add_account.html  # Add new account form
-│   ├── transactions.html # Transaction history
+├── budget.db              # SQLite database (created automatically)
+├── static/                # Static files (CSS, images)
+│   ├── css/
+│   │   └── style.css      # Custom styles
+│   └── images/
+│       ├── dollar.png     # Dashboard background
+│       └── dollar1.png    # Login background
+├── templates/             # HTML templates
+│   ├── base.html          # Base template with navigation
+│   ├── login.html         # User login form
+│   ├── register.html      # User registration form
+│   ├── dashboard.html     # Dashboard with summary and charts
+│   ├── accounts.html      # Account listing
+│   ├── add_account.html   # Add new account form
+│   ├── transactions.html  # Transaction history
 │   ├── add_transaction.html # Add transaction form
-│   ├── investments.html  # Investment portfolio
+│   ├── investments.html   # Investment portfolio
 │   ├── add_investment.html # Add investment form
-│   ├── categories.html   # Category management
-│   ├── add_category.html # Add category form
-│   ├── budget.html       # Monthly budget tracking
-│   ├── add_budget.html   # Add/edit budget form
-│   └── reports.html      # Financial reports and charts
-└── README.md            # This file
+│   ├── categories.html    # Category management
+│   ├── add_category.html  # Add category form
+│   ├── budget.html        # Monthly budget tracking
+│   ├── add_budget.html    # Add/edit budget form
+│   └── reports.html       # Financial reports and charts
+└── README.md              # This file
 ```
 
 ## Development
@@ -213,26 +145,15 @@ To modify or extend the application:
 2. **Database changes:** Modify the models in `app.py` and handle migrations
 3. **Styling:** Update Bootstrap classes in templates or add custom CSS
 4. **Charts:** Modify Chart.js configurations in template script blocks
-
-## Security Notes
-
-- Change the `SECRET_KEY` in `app.py` for production use
-- Consider using environment variables for sensitive configuration
-- Implement user authentication for multi-user scenarios
-- Use proper database migration tools for schema changes in production
-
-## Future Enhancements
-
-- User authentication and multi-user support
-- Data import/export (CSV, QIF)
-- Recurring transaction templates
-- Bill reminders and notifications
-- Mobile app companion
-- Advanced reporting and analytics
-- Integration with bank APIs
-- Backup and restore functionality
+5. **Configuration:** Use environment variables for sensitive configuration
+6. **Authentication:** Implement user authentication for multi-user scenarios
+7. **Migrations:** Use proper database migration tools for schema changes in production
+8. **Analytics:** Advanced reporting and analytics
+9. **Integrations:** Integration with bank APIs
+10. **Backup:** Backup and restore functionality
 
 ## License
 
-
 This project is open source and available under the MIT License.
+
+**Author: Roberto Raimondo - IS Senior Systems Engineer II**
